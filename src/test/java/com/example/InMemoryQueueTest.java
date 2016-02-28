@@ -35,4 +35,11 @@ public class InMemoryQueueTest extends TestCase {
         assertEquals(expected, actual);
     }
 
+    public void testDeleteMessage() {
+        InMemoryQueueService queue = new InMemoryQueueService();
+        QueueMessage message = new QueueMessage();
+        message.setQueueLocation(0);
+        queue.delete(message);
+    }
+
 }

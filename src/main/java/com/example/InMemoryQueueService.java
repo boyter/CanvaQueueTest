@@ -25,6 +25,6 @@ public class InMemoryQueueService implements QueueService {
     }
 
     public void delete(QueueMessage message) {
-
+        this.ringBufferQueue[message.getQueueLocation()] = null;
     }
 }
