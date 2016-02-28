@@ -1,7 +1,20 @@
 package com.example;
 
 public class InMemoryQueueService implements QueueService {
-  //
-  // Task 2: Implement me.
-  //
+
+    public InMemoryQueueService(){}
+
+    public InMemoryQueueService(int queueLength) {}
+    
+    public void push(QueueMessage message) {
+
+    }
+
+    public QueueMessage pull() {
+        return null;
+    }
+
+    public void delete(QueueMessage message) {
+
+    }
 }

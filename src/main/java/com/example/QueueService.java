@@ -1,6 +1,9 @@
 package com.example;
 
 public interface QueueService {
+    void push(QueueMessage message);
+    QueueMessage pull();
+    void delete(QueueMessage message);
 
   //
   // Task 1: Define me.
