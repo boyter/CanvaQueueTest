@@ -42,4 +42,17 @@ public class InMemoryQueueTest extends TestCase {
         queue.delete(message);
     }
 
+    public void testQueueWraps() {
+        InMemoryQueueService queue = new InMemoryQueueService(2);
+
+        QueueMessage expected = new QueueMessage();
+        QueueMessage actual;
+
+        for(int i = 0; i < 10; i++) {
+            queue.push(expected);
+            actual = queue.pull();
+            queue.delete(actual);
+        }
+    }
+
 }
