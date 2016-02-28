@@ -13,4 +13,16 @@ public class SqsQueueService implements QueueService {
 
   public SqsQueueService(AmazonSQSClient sqsClient) {
   }
+
+  public void push(QueueMessage message) {
+
+  }
+
+  public QueueMessage pull() {
+    return null;
+  }
+
+  public void delete(QueueMessage message) {
+
+  }
 }

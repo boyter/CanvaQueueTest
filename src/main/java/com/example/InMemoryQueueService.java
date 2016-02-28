@@ -2,10 +2,17 @@ package com.example;
 
 public class InMemoryQueueService implements QueueService {
 
-    public InMemoryQueueService(){}
+    private QueueMessage[] ringBufferQueue;
 
-    public InMemoryQueueService(int queueLength) {}
-    
+
+    public InMemoryQueueService(){
+        this.ringBufferQueue = new QueueMessage[10000];
+    }
+
+    public InMemoryQueueService(int queueLength) {
+        this.ringBufferQueue = new QueueMessage[queueLength];
+    }
+
     public void push(QueueMessage message) {
 
     }

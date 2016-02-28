@@ -1,7 +1,11 @@
 package com.example;
 
+import org.junit.Test;
+
 public class InMemoryQueueTest {
-  //
-  // Implement me.
-  //
+
+    @Test(expected=NegativeArraySizeException.class)
+    public void testConstructorNegativeSize() {
+        InMemoryQueueService queue = new InMemoryQueueService(-1);
+    }
 }
