@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.exceptions.QueueFullException;
 import junit.framework.TestCase;
 import org.junit.Test;
 
@@ -26,7 +27,7 @@ public class InMemoryQueueTest extends TestCase {
         assertNull(message);
     }
 
-    public void testPushPullExpectsSame() {
+    public void testPushPullExpectsSame() throws QueueFullException {
         InMemoryQueueService queue = new InMemoryQueueService();
         QueueMessage expected = new QueueMessage();
         queue.push(expected);
@@ -42,7 +43,16 @@ public class InMemoryQueueTest extends TestCase {
         queue.delete(message);
     }
 
-    public void testQueueWraps() {
+    public void testPushQueue() throws QueueFullException {
+        InMemoryQueueService queue = new InMemoryQueueService(2);
+
+        QueueMessage expected = new QueueMessage();
+
+        queue.push(expected);
+        queue.push(expected);
+    }
+
+    public void testQueueWraps() throws QueueFullException {
         InMemoryQueueService queue = new InMemoryQueueService(2);
 
         QueueMessage expected = new QueueMessage();
@@ -54,5 +64,4 @@ public class InMemoryQueueTest extends TestCase {
             queue.delete(actual);
         }
     }
-
 }

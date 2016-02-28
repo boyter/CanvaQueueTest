@@ -1,7 +1,9 @@
 package com.example;
 
+import com.example.exceptions.QueueFullException;
+
 public interface QueueService {
-    void push(QueueMessage message);
+    void push(QueueMessage message) throws QueueFullException;
     QueueMessage pull();
     void delete(QueueMessage message);
 
