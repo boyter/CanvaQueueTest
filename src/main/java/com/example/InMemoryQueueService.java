@@ -2,8 +2,9 @@ package com.example;
 
 public class InMemoryQueueService implements QueueService {
 
+    private int readQueueLocation = 0;
+    private int pushQueueLocation = 0;
     private QueueMessage[] ringBufferQueue;
-
 
     public InMemoryQueueService(){
         this.ringBufferQueue = new QueueMessage[10000];
@@ -14,11 +15,13 @@ public class InMemoryQueueService implements QueueService {
     }
 
     public void push(QueueMessage message) {
-
+        this.ringBufferQueue[this.pushQueueLocation] = message;
+        this.pushQueueLocation++;
     }
 
     public QueueMessage pull() {
-        return null;
+        QueueMessage message = this.ringBufferQueue[this.readQueueLocation];
+        return message;
     }
 
     public void delete(QueueMessage message) {
