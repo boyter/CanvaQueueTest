@@ -168,4 +168,41 @@ public class InMemoryQueueTest extends TestCase {
         assertNull(queue.pull());
         assertNull(queue.pull());
     }
+
+    public void testQueueWithThreads() throws InterruptedException {
+        // You can only prove the presence of concurrent bugs, not their absence.
+        // Although that's true of any code. Anyway let's see if we can identify any...
+
+        final InMemoryQueueService queue = new InMemoryQueueService();
+
+        for(int i = 0; i < 10; i++) {
+            new Thread() {
+                public void run() {
+                    int count = 20000;
+                    while (count > 0) {
+                        QueueMessage message = new QueueMessage("Thread queue message");
+                        try {
+                            queue.push(message);
+                        } catch (QueueFullException e) {
+                        }
+                        message = queue.pull();
+                        queue.delete(message);
+                        count--;
+                    }
+                }
+            }.start();
+        }
+
+        int count = 20000;
+        while (count > 0) {
+            QueueMessage message = new QueueMessage("Main queue message");
+            try {
+                queue.push(message);
+            } catch (QueueFullException e) {
+            }
+            message = queue.pull();
+            queue.delete(message);
+            count--;
+        }
+    }
 }
