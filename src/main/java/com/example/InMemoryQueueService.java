@@ -7,17 +7,29 @@ public class InMemoryQueueService implements QueueService {
     private int itemsInQueue = 0;
     private int readQueueLocation = 0;
     private int pushQueueLocation = 0;
-    private long visibilityTimeout = 10; // 10 seconds by default
+    private long visibilityTimeout = 10000; // 10 seconds
     private QueueMessage[] ringBufferQueue;
 
+    /**
+     * Create an in memory queue with size of 10000 elements
+     * and 10 second visibility timeout
+     */
     public InMemoryQueueService(){
         this.ringBufferQueue = new QueueMessage[10000];
     }
 
+    /**
+     * Create in memory queue with a visibility timeout where 1 second = 1000
+     * @param visibilitytimeout
+     */
     public InMemoryQueueService(long visibilitytimeout){
         this.visibilityTimeout = visibilitytimeout;
     }
 
+    /**
+     * Create in memory queue with custom length (must be greater than 0)
+     * @param queueLength
+     */
     public InMemoryQueueService(int queueLength) {
         if(queueLength == 0) {
             throw new IllegalArgumentException("Queue length must be greater than 0");
@@ -25,6 +37,12 @@ public class InMemoryQueueService implements QueueService {
         this.ringBufferQueue = new QueueMessage[queueLength];
     }
 
+    /**
+     * Create in memory queue with custom length (must be greater than 0)
+     * and a visibility timeout where 1 second = 1000
+     * @param queueLength
+     * @param visibilitytimeout
+     */
     public InMemoryQueueService(int queueLength, long visibilitytimeout) {
         if(queueLength == 0) {
             throw new IllegalArgumentException("Queue length must be greater than 0");
@@ -34,6 +52,11 @@ public class InMemoryQueueService implements QueueService {
         this.visibilityTimeout = visibilitytimeout;
     }
 
+    /**
+     * Push QueueMessage onto the queue for processing.
+     * @param message
+     * @throws QueueFullException
+     */
     public synchronized void push(QueueMessage message) throws QueueFullException {
         if(this.itemsInQueue == this.ringBufferQueue.length) {
             throw new QueueFullException("The queue is full");
@@ -60,6 +83,15 @@ public class InMemoryQueueService implements QueueService {
         this.itemsInQueue++;
     }
 
+    /**
+     * Pulls the next available message from the queue.
+     * No guarantee on order but attempts to be FIFO
+     * Assuming processing time is the same for jobs
+     * this should hold true.
+     * Messages pulled will be locked for
+     * 10 seconds before being delivered to another consumer
+     * if not deleted.
+     */
     public synchronized QueueMessage pull() {
         int startReadLocation = this.readQueueLocation;
         QueueMessage message = null;
@@ -70,7 +102,7 @@ public class InMemoryQueueService implements QueueService {
 
             // If we have a message and it's not 'locked' thats who we want
             if(message != null && message.getTimeout() <= System.currentTimeMillis()) {
-                message.setTimeout(System.currentTimeMillis() + (this.visibilityTimeout * 1000L));
+                message.setTimeout(System.currentTimeMillis() + this.visibilityTimeout);
                 search = false;
             }
             // Wrap around search
@@ -86,6 +118,12 @@ public class InMemoryQueueService implements QueueService {
         return message;
     }
 
+    /**
+     * Deletes a message from the queue. Messages
+     * that are not deleted will after the default time of
+     * 10 seconds be ready to be consumed again.
+     * @param message
+     */
     public synchronized void delete(QueueMessage message) {
         if(message == null) {
             return;
