@@ -9,9 +9,5 @@ public class FileQueueService implements QueueService {
     }
 
     public void delete(QueueMessage message) {
-
     }
-    //
-  // Task 3: Implement me if you have time.
-  //
 }
