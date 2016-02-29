@@ -34,7 +34,7 @@ public class InMemoryQueueService implements QueueService {
         this.visibilityTimeout = visibilitytimeout;
     }
 
-    public void push(QueueMessage message) throws QueueFullException {
+    public synchronized void push(QueueMessage message) throws QueueFullException {
         if(this.itemsInQueue == this.ringBufferQueue.length) {
             throw new QueueFullException("The queue is full");
         }
@@ -60,7 +60,7 @@ public class InMemoryQueueService implements QueueService {
         this.itemsInQueue++;
     }
 
-    public QueueMessage pull() {
+    public synchronized QueueMessage pull() {
         int startReadLocation = this.readQueueLocation;
         QueueMessage message = null;
         boolean search = true;
@@ -86,7 +86,7 @@ public class InMemoryQueueService implements QueueService {
         return message;
     }
 
-    public void delete(QueueMessage message) {
+    public synchronized void delete(QueueMessage message) {
         if(message == null) {
             return;
         }
