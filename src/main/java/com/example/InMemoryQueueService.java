@@ -7,7 +7,6 @@ public class InMemoryQueueService implements QueueService {
     private int itemsInQueue = 0;
     private int readQueueLocation = 0;
     private int pushQueueLocation = 0;
-    private long visibilityTimeout = 10000; // 10 seconds
     private QueueMessage[] ringBufferQueue;
 
     /**
@@ -16,14 +15,6 @@ public class InMemoryQueueService implements QueueService {
      */
     public InMemoryQueueService(){
         this.ringBufferQueue = new QueueMessage[10000];
-    }
-
-    /**
-     * Create in memory queue with a visibility timeout where 1 second = 1000
-     * @param visibilitytimeout
-     */
-    public InMemoryQueueService(long visibilitytimeout){
-        this.visibilityTimeout = visibilitytimeout;
     }
 
     /**
@@ -38,26 +29,15 @@ public class InMemoryQueueService implements QueueService {
     }
 
     /**
-     * Create in memory queue with custom length (must be greater than 0)
-     * and a visibility timeout where 1 second = 1000
-     * @param queueLength
-     * @param visibilitytimeout
-     */
-    public InMemoryQueueService(int queueLength, long visibilitytimeout) {
-        if(queueLength == 0) {
-            throw new IllegalArgumentException("Queue length must be greater than 0");
-        }
-
-        this.ringBufferQueue = new QueueMessage[queueLength];
-        this.visibilityTimeout = visibilitytimeout;
-    }
-
-    /**
-     * Push QueueMessage onto the queue for processing.
+     * Push QueueMessage onto the queue for processing. Queue name is ignored
+     * for this implementation of the queue. To use a seperate queue create
+     * a new instance of this class.
+     * @param queueName
      * @param message
      * @throws QueueFullException
      */
-    public synchronized void push(QueueMessage message) throws QueueFullException {
+    @Override
+    public synchronized void push(String queueName, QueueMessage message) throws QueueFullException {
         if(this.itemsInQueue == this.ringBufferQueue.length) {
             throw new QueueFullException("The queue is full");
         }
@@ -91,8 +71,13 @@ public class InMemoryQueueService implements QueueService {
      * Messages pulled will be locked for
      * 10 seconds before being delivered to another consumer
      * if not deleted.
+     * Parameter queueName is ignored
+     * @param queueName
+     * @param visibilityTimeout
+     * @return
      */
-    public synchronized QueueMessage pull() {
+    @Override
+    public synchronized QueueMessage pull(String queueName, long visibilityTimeout) {
         int startReadLocation = this.readQueueLocation;
         QueueMessage message = null;
         boolean search = true;
@@ -102,7 +87,7 @@ public class InMemoryQueueService implements QueueService {
 
             // If we have a message and it's not 'locked' thats who we want
             if(message != null && message.getTimeout() <= System.currentTimeMillis()) {
-                message.setTimeout(System.currentTimeMillis() + this.visibilityTimeout);
+                message.setTimeout(System.currentTimeMillis() + visibilityTimeout);
                 search = false;
             }
             // Wrap around search
@@ -122,9 +107,11 @@ public class InMemoryQueueService implements QueueService {
      * Deletes a message from the queue. Messages
      * that are not deleted will after the default time of
      * 10 seconds be ready to be consumed again.
+     * @param queueName
      * @param message
      */
-    public synchronized void delete(QueueMessage message) {
+    @Override
+    public synchronized void delete(String queueName, QueueMessage message) {
         if(message == null) {
             return;
         }

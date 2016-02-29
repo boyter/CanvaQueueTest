@@ -40,7 +40,7 @@ public class InMemoryQueueTest extends TestCase {
 
     public void testPullNoMessageExpectsNull() {
         InMemoryQueueService queue = new InMemoryQueueService();
-        QueueMessage message = queue.pull();
+        QueueMessage message = queue.pull("", 0);
         assertNull(message);
     }
 
@@ -50,9 +50,9 @@ public class InMemoryQueueTest extends TestCase {
         QueueMessage expected = mock(QueueMessage.class);
         when(expected.getTimeout()).thenReturn(System.currentTimeMillis() - 10000000);
 
-        queue.push(expected);
+        queue.push("", expected);
 
-        QueueMessage actual = queue.pull();
+        QueueMessage actual = queue.pull("", 0);
         assertEquals(expected, actual);
     }
 
@@ -60,7 +60,7 @@ public class InMemoryQueueTest extends TestCase {
         InMemoryQueueService queue = new InMemoryQueueService();
         QueueMessage message = new QueueMessage("Message");
         message.setQueueLocation(0);
-        queue.delete(message);
+        queue.delete("", message);
     }
 
     public void testPushQueueToLimit() throws QueueFullException {
@@ -68,13 +68,13 @@ public class InMemoryQueueTest extends TestCase {
 
         QueueMessage expected = new QueueMessage("Message");
 
-        queue.push(expected);
-        queue.push(expected);
+        queue.push("", expected);
+        queue.push("", expected);
     }
 
     public void testDeleteNullParameter() {
         InMemoryQueueService queue = new InMemoryQueueService();
-        queue.delete(null);
+        queue.delete("", null);
     }
 
     public void testQueueWrap() throws QueueFullException {
@@ -87,9 +87,9 @@ public class InMemoryQueueTest extends TestCase {
             expected = new QueueMessage("Message " + i);
 
 
-            queue.push(expected);
-            actual = queue.pull();
-            queue.delete(actual);
+            queue.push("", expected);
+            actual = queue.pull("", 0);
+            queue.delete("", actual);
 
             assertEquals(actual, expected);
         }
@@ -105,9 +105,9 @@ public class InMemoryQueueTest extends TestCase {
             expected = mock(QueueMessage.class);
             when(expected.getTimeout()).thenReturn(System.currentTimeMillis() - 10000000);
 
-            queue.push(expected);
-            actual = queue.pull();
-            queue.delete(actual);
+            queue.push("", expected);
+            actual = queue.pull("", 0);
+            queue.delete("", actual);
 
             assertEquals(actual, expected);
         }
@@ -119,11 +119,11 @@ public class InMemoryQueueTest extends TestCase {
         QueueMessage expected1 = new QueueMessage("Message 1");
         QueueMessage expected2 = new QueueMessage("Message 2");
 
-        queue.push(expected1);
-        queue.push(expected2);
+        queue.push("", expected1);
+        queue.push("", expected2);
 
-        assertEquals(queue.pull(), expected1);
-        assertEquals(queue.pull(), expected2);
+        assertEquals(queue.pull("", 10000), expected1);
+        assertEquals(queue.pull("", 10000), expected2);
     }
 
     public void testQueueTimeoutFirstLocked() throws QueueFullException {
@@ -137,10 +137,10 @@ public class InMemoryQueueTest extends TestCase {
         when(mockMessage1.getTimeout()).thenReturn(System.currentTimeMillis() + 10000000);
         when(mockMessage2.getTimeout()).thenReturn(System.currentTimeMillis() - 10000000);
 
-        queue.push(mockMessage1);
-        queue.push(mockMessage2);
+        queue.push("", mockMessage1);
+        queue.push("", mockMessage2);
 
-        assertEquals(mockMessage2, queue.pull());
+        assertEquals(mockMessage2, queue.pull("", 0));
     }
 
     public void testQueueTimeoutLocked() throws QueueFullException {
@@ -149,9 +149,9 @@ public class InMemoryQueueTest extends TestCase {
         QueueMessage mockMessage1 = mock(QueueMessage.class);
 
         when(mockMessage1.getTimeout()).thenReturn(System.currentTimeMillis() + 10000000);
-        queue.push(mockMessage1);
+        queue.push("", mockMessage1);
 
-        assertNull(queue.pull());
+        assertNull(queue.pull("", 0));
     }
 
     public void testQueueTwoItemsTimeoutLocked() throws QueueFullException {
@@ -162,11 +162,11 @@ public class InMemoryQueueTest extends TestCase {
 
         when(mockMessage1.getTimeout()).thenReturn(System.currentTimeMillis() + 10000000);
         when(mockMessage2.getTimeout()).thenReturn(System.currentTimeMillis() + 10000000);
-        queue.push(mockMessage1);
-        queue.push(mockMessage2);
+        queue.push("", mockMessage1);
+        queue.push("", mockMessage2);
 
-        assertNull(queue.pull());
-        assertNull(queue.pull());
+        assertNull(queue.pull("", 0));
+        assertNull(queue.pull("", 0));
     }
 
     public void testQueueWithThreads() throws InterruptedException {
@@ -182,11 +182,11 @@ public class InMemoryQueueTest extends TestCase {
                     while (count > 0) {
                         QueueMessage message = new QueueMessage("Thread queue message");
                         try {
-                            queue.push(message);
+                            queue.push("", message);
                         } catch (QueueFullException e) {
                         }
-                        message = queue.pull();
-                        queue.delete(message);
+                        message = queue.pull("", 1000);
+                        queue.delete("", message);
                         count--;
                     }
                 }
@@ -197,11 +197,11 @@ public class InMemoryQueueTest extends TestCase {
         while (count > 0) {
             QueueMessage message = new QueueMessage("Main queue message");
             try {
-                queue.push(message);
+                queue.push("", message);
             } catch (QueueFullException e) {
             }
-            message = queue.pull();
-            queue.delete(message);
+            message = queue.pull("", 0);
+            queue.delete("", message);
             count--;
         }
     }

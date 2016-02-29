@@ -7,7 +7,7 @@ import java.io.IOException;
 public class FileQueueTest extends TestCase {
     public void testPullNoMessageExpectsNull() {
         FileQueueService queue = new FileQueueService();
-        QueueMessage message = queue.pull();
+        QueueMessage message = queue.pull("", 1000);
         assertNull(message);
     }
 
@@ -17,7 +17,7 @@ public class FileQueueTest extends TestCase {
 
         queue.push(expected);
 
-        QueueMessage actual = queue.pull();
+        QueueMessage actual = queue.pull("", 0);
         assertEquals(expected, actual);
     }
 }

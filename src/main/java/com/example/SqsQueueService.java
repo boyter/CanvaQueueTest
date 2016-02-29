@@ -1,6 +1,7 @@
 package com.example;
 
 import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.example.exceptions.QueueFullException;
 
 public class SqsQueueService implements QueueService {
   //
@@ -14,15 +15,19 @@ public class SqsQueueService implements QueueService {
   public SqsQueueService(AmazonSQSClient sqsClient) {
   }
 
-  public void push(QueueMessage message) {
+
+  @Override
+  public void push(String queueName, QueueMessage message) throws QueueFullException {
 
   }
 
-  public QueueMessage pull() {
+  @Override
+  public QueueMessage pull(String queueName, long visibilityTimeout) {
     return null;
   }
 
-  public void delete(QueueMessage message) {
+  @Override
+  public void delete(String queueName, QueueMessage message) {
 
   }
 }
