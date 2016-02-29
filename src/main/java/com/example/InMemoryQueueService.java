@@ -7,20 +7,31 @@ public class InMemoryQueueService implements QueueService {
     private int itemsInQueue = 0;
     private int readQueueLocation = 0;
     private int pushQueueLocation = 0;
-    private long defaultTimeout = 1000; // 10 seconds
+    private long visibilityTimeout = 10; // 10 seconds by default
     private QueueMessage[] ringBufferQueue;
 
     public InMemoryQueueService(){
         this.ringBufferQueue = new QueueMessage[10000];
     }
 
+    public InMemoryQueueService(long visibilitytimeout){
+        this.visibilityTimeout = visibilitytimeout;
+    }
+
     public InMemoryQueueService(int queueLength) {
+        if(queueLength == 0) {
+            throw new IllegalArgumentException("Queue length must be greater than 0");
+        }
         this.ringBufferQueue = new QueueMessage[queueLength];
     }
 
-    public InMemoryQueueService(int queueLength, long messageTimeout) {
+    public InMemoryQueueService(int queueLength, long visibilitytimeout) {
+        if(queueLength == 0) {
+            throw new IllegalArgumentException("Queue length must be greater than 0");
+        }
+
         this.ringBufferQueue = new QueueMessage[queueLength];
-        this.defaultTimeout = messageTimeout;
+        this.visibilityTimeout = visibilitytimeout;
     }
 
     public void push(QueueMessage message) throws QueueFullException {
@@ -28,12 +39,24 @@ public class InMemoryQueueService implements QueueService {
             throw new QueueFullException("The queue is full");
         }
 
-        // Assumes that the next element is free, which is currently
-        // wrong
-        message.setQueueLocation(this.pushQueueLocation);
-        this.ringBufferQueue[this.pushQueueLocation] = message;
+        int pushLocation = this.pushQueueLocation;
+        boolean search = true;
 
-        this.pushQueueLocation = this.pushQueueLocation == (this.ringBufferQueue.length - 1) ? 0 : pushQueueLocation + 1;
+        // Find the first free space starting from the last location
+        while(search) {
+            if(this.ringBufferQueue[pushLocation] == null) {
+                search = false;
+            }
+            else {
+                pushLocation = this.incrementPosition(pushLocation);
+            }
+        }
+
+        message.setQueueLocation(pushLocation);
+        this.ringBufferQueue[pushLocation] = message;
+
+        // Move the next push location to where we inserted as anything before is filled
+        this.pushQueueLocation = this.incrementPosition(pushLocation);
         this.itemsInQueue++;
     }
 
@@ -47,14 +70,15 @@ public class InMemoryQueueService implements QueueService {
 
             // If we have a message and it's not 'locked' thats who we want
             if(message != null && message.getTimeout() <= System.currentTimeMillis()) {
-                message.setTimeout(System.currentTimeMillis() + (this.defaultTimeout * 1000L));
+                message.setTimeout(System.currentTimeMillis() + (this.visibilityTimeout * 1000L));
                 search = false;
             }
             // Wrap around search
-            startReadLocation = startReadLocation == (this.ringBufferQueue.length - 1) ? 0 : startReadLocation + 1;
+            startReadLocation = this.incrementPosition(startReadLocation);
 
             // We have looked at every element found nothing to do
-            if(startReadLocation == this.pushQueueLocation) {
+            if(startReadLocation == this.pushQueueLocation && search) {
+                message = null;
                 search = false;
             }
         }
@@ -73,5 +97,9 @@ public class InMemoryQueueService implements QueueService {
 
         this.ringBufferQueue[message.getQueueLocation()] = null;
         this.itemsInQueue--;
+    }
+
+    private int incrementPosition(int position) {
+        return position == (this.ringBufferQueue.length - 1) ? 0 : position + 1;
     }
 }
