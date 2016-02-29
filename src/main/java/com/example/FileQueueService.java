@@ -1,7 +1,5 @@
 package com.example;
 
-import com.example.exceptions.QueueFullException;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -9,7 +7,8 @@ import java.io.PrintWriter;
 
 public class FileQueueService implements QueueService {
 
-    public void push(QueueMessage message) throws InterruptedException, IOException {
+    @Override
+    public void push(String queueName, QueueMessage message) throws InterruptedException, IOException {
 //        String queue = fromUrl(queueUrl);
         File messages = getMessagesFile("");
         File lock = getLockFile("");
@@ -21,6 +20,16 @@ public class FileQueueService implements QueueService {
         } finally {
             unlock(lock);
         }
+
+    }
+
+    @Override
+    public QueueMessage pull(String queueName, long visibilityTimeout) {
+        return null;
+    }
+
+    @Override
+    public void delete(String queueName, QueueMessage message) {
 
     }
 
@@ -40,20 +49,5 @@ public class FileQueueService implements QueueService {
 
     private void unlock(File lock) {
         lock.delete();
-    }
-
-    @Override
-    public void push(String queueName, QueueMessage message) throws QueueFullException {
-
-    }
-
-    @Override
-    public QueueMessage pull(String queueName, long visibilityTimeout) {
-        return null;
-    }
-
-    @Override
-    public void delete(String queueName, QueueMessage message) {
-
     }
 }
