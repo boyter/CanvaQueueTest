@@ -2,8 +2,10 @@ package com.example;
 
 import com.example.exceptions.QueueFullException;
 
+import java.io.IOException;
+
 public interface QueueService {
-    void push(QueueMessage message) throws QueueFullException;
+    void push(QueueMessage message) throws QueueFullException, InterruptedException, IOException;
     QueueMessage pull();
     void delete(QueueMessage message);
 
