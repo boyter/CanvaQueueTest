@@ -26,7 +26,6 @@ public class InMemoryQueueService implements QueueService {
         this.ringBufferQueue[this.pushQueueLocation] = message;
 
         this.pushQueueLocation = this.pushQueueLocation == this.ringBufferQueue.length ? 0 : this.pushQueueLocation++;
-
         this.itemsInQueue++;
     }
 

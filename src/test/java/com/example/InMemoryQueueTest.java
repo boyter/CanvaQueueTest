@@ -12,7 +12,7 @@ public class InMemoryQueueTest extends TestCase {
         // going to ghetto it for the moment...
         boolean exceptionThrown = false;
         try {
-            InMemoryQueueService queue = new InMemoryQueueService(-1);
+            new InMemoryQueueService(-1);
         }
         catch(NegativeArraySizeException ex) {
             exceptionThrown = true;
@@ -52,16 +52,18 @@ public class InMemoryQueueTest extends TestCase {
         queue.push(expected);
     }
 
-    public void testQueueWraps() throws QueueFullException {
+    public void testQueueWrap() throws QueueFullException {
         InMemoryQueueService queue = new InMemoryQueueService(2);
 
         QueueMessage expected = new QueueMessage();
         QueueMessage actual;
 
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < 1000; i++) {
             queue.push(expected);
             actual = queue.pull();
             queue.delete(actual);
+
+            assertEquals(actual, expected);
         }
     }
 }
