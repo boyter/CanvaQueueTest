@@ -6,7 +6,7 @@ import java.io.IOException;
 
 public interface QueueService {
     void push(String queueName, QueueMessage message) throws QueueFullException, InterruptedException, IOException;
-    QueueMessage pull(String queueName, long visibilityTimeout);
+    QueueMessage pull(String queueName, long visibilityTimeout) throws InterruptedException, IOException;
     void delete(String queueName, QueueMessage message);
 
   // Task 1: Define me.

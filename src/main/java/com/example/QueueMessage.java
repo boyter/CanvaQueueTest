@@ -55,7 +55,7 @@ public class QueueMessage {
         // Making the huge assumption that :: is ok as a delimiter
         // better to use something like JSON but I have no internet
         // to pull down a library right now
-        return MessageFormat.format("{0}::{1}", this.getMessage(), this.getTimeout());
+        return MessageFormat.format("{0}::{1}", this.getMessage(), Long.toString(this.getTimeout()));
     }
 
     public void stringDecode(String toDecode) {
