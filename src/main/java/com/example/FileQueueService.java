@@ -9,18 +9,16 @@ public class FileQueueService implements QueueService {
 
     @Override
     public void push(String queueName, QueueMessage message) throws InterruptedException, IOException {
-//        String queue = fromUrl(queueUrl);
-        File messages = getMessagesFile("");
-        File lock = getLockFile("");
-//        long visibileFrom = (delaySeconds != null) ? now() + TimeUnit.SECONDS.toMillis(delaySeconds) : 0L;
+        File messages = this.getMessagesFile(queueName);
+        File lock = this.getLockFile(queueName);
 
-        lock(lock);
+        this.lock(lock);
         try (PrintWriter pw = new PrintWriter(new FileWriter(messages, true))) {  // append
-            pw.println(message);
+            pw.println(message.stringEncode());
+            // write out message as expected
         } finally {
             unlock(lock);
         }
-
     }
 
     @Override
@@ -34,11 +32,31 @@ public class FileQueueService implements QueueService {
     }
 
     private File getMessagesFile(String queueName) {
-        return null;
+        // Hash the queue + salt to get something slightly unique
+        // and more importantly a legal directory name
+        File tempDir = this.createQueueDirectory(queueName);
+        File messagesFile = new File(tempDir, "messages");
+
+        return messagesFile;
+    }
+
+    private File createQueueDirectory(String queueName) {
+        String baseName = org.apache.commons.codec.digest.DigestUtils.md5Hex(queueName + "FileQueue");
+        File baseDir = new File(System.getProperty("java.io.tmpdir"));
+
+        File tempDir = new File(baseDir, baseName);
+
+        if(!tempDir.exists()) {
+            tempDir.mkdir();
+        }
+        return tempDir;
     }
 
     private File getLockFile(String queueName) {
-        return null;
+        File tempDir = this.createQueueDirectory(queueName);
+        File lockFile = new File(tempDir, "lock");
+
+        return lockFile;
     }
 
     private void lock(File lock) throws InterruptedException {

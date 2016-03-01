@@ -1,5 +1,7 @@
 package com.example;
 
+import java.text.MessageFormat;
+
 public class QueueMessage {
     private int queueLocation;
     private long timeout;
@@ -47,5 +49,29 @@ public class QueueMessage {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String stringEncode() {
+        // Making the huge assumption that :: is ok as a delimiter
+        // better to use something like JSON but I have no internet
+        // to pull down a library right now
+        return MessageFormat.format("{0}::{1}", this.getMessage(), this.getTimeout());
+    }
+
+    public void stringDecode(String toDecode) {
+        // Making the huge assumption that :: is ok as a delimiter
+        // better to use something like JSON but I have no internet
+        // to pull down a library right now
+        String[] splitString = toDecode.split("::");
+
+        if(splitString.length == 2) {
+            this.setMessage(splitString[0]);
+            try {
+                this.setTimeout(Long.parseLong(splitString[1]));
+            }
+            catch(NumberFormatException ex) {
+                this.setTimeout(0L);
+            }
+        }
     }
 }
