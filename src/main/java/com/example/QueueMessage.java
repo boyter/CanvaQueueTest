@@ -51,6 +51,25 @@ public class QueueMessage {
         this.message = message;
     }
 
+    public QueueMessage clone() {
+        QueueMessage clone = new QueueMessage(this.getMessage());
+        clone.setTimeout(this.getTimeout());
+        return clone;
+    }
+
+    public boolean areSame(QueueMessage queueMessage) {
+        if(queueMessage == null) {
+            return false;
+        }
+
+        if(queueMessage.getMessage().equals(this.getMessage()) &&
+                queueMessage.getTimeout() == this.getTimeout()) {
+            return true;
+        }
+
+        return false;
+    }
+
     public String stringEncode() {
         // Making the huge assumption that :: is ok as a delimiter
         // better to use something like JSON but I have no internet

@@ -175,7 +175,7 @@ public class InMemoryQueueTest extends TestCase {
 
         final InMemoryQueueService queue = new InMemoryQueueService();
 
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < 20; i++) {
             new Thread() {
                 public void run() {
                     int count = 20000;

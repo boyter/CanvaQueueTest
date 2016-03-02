@@ -32,7 +32,6 @@ public class FileQueueService implements QueueService {
         QueueMessage returnQueueMessage = null;
 
         this.lock(lock);
-
         try (PrintWriter pw = new PrintWriter(new FileWriter(tempMessages, true))) {
             List<String> messageList = Files.readLines(messages, Charsets.UTF_8);
             QueueMessage queueMessage = new QueueMessage("");
@@ -42,7 +41,7 @@ public class FileQueueService implements QueueService {
 
                 if (queueMessage.getTimeout() <= System.currentTimeMillis() && returnQueueMessage == null) {
                     queueMessage.setTimeout(System.currentTimeMillis() + visibilityTimeout);
-                    returnQueueMessage = queueMessage;
+                    returnQueueMessage = queueMessage.clone();
                 }
 
                 pw.println(queueMessage.stringEncode());
@@ -63,8 +62,36 @@ public class FileQueueService implements QueueService {
     }
 
     @Override
-    public void delete(String queueName, QueueMessage message) {
+    public void delete(String queueName, QueueMessage message) throws InterruptedException {
+        // If we have duplicate message and timeout values we delete the first
+        // wrong one? Possibly, but if they are duplicates it probably dosn't matter
 
+        File messages = this.getMessagesFile(queueName);
+        File lock = this.getLockFile(queueName);
+        File tempMessages = this.getTempMessagesFile(queueName);
+
+        this.lock(lock);
+        try (PrintWriter pw = new PrintWriter(new FileWriter(tempMessages, true))) {
+            List<String> messageList = Files.readLines(messages, Charsets.UTF_8);
+            QueueMessage queueMessage = new QueueMessage("");
+
+            for (String msg : messageList) {
+                queueMessage.stringDecode(msg);
+
+                if(!queueMessage.areSame(message)) {
+                    pw.println(queueMessage.stringEncode());
+                }
+            }
+
+            Files.move(tempMessages, messages);
+        }
+        catch(IOException ex) {
+            // If we have no messages to read IE readLines failed
+            // we can safely ignore the exception because it may be just that
+            // the queue has not had anything written yet
+        } finally {
+            this.unlock(lock);
+        }
     }
 
     /**
