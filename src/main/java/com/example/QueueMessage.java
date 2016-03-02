@@ -1,11 +1,14 @@
 package com.example;
 
+import com.amazonaws.services.sqs.model.Message;
+
 import java.text.MessageFormat;
 
 public class QueueMessage {
     private int queueLocation;
     private long timeout;
     private String message;
+    private Message sqsMessage;
 
     public QueueMessage(String message) {
         this.message = message;
@@ -71,17 +74,15 @@ public class QueueMessage {
     }
 
     public String stringEncode() {
-        // Making the huge assumption that :: is ok as a delimiter
-        // better to use something like JSON but I have no internet
-        // to pull down a library right now
-        return MessageFormat.format("{0}::{1}", this.getMessage(), Long.toString(this.getTimeout()));
+        // Making the huge assumption that ::: is ok as a delimiter
+        // better to use something like JSON but readme said no other libraries
+        return MessageFormat.format("{0}:::{1}", this.getMessage(), Long.toString(this.getTimeout()));
     }
 
     public void stringDecode(String toDecode) {
-        // Making the huge assumption that :: is ok as a delimiter
-        // better to use something like JSON but I have no internet
-        // to pull down a library right now
-        String[] splitString = toDecode.split("::");
+        // Making the huge assumption that ::: is ok as a delimiter
+        // better to use something like JSON but readme said no other libraries
+        String[] splitString = toDecode.split(":::");
 
         if(splitString.length == 2) {
             this.setMessage(splitString[0]);
@@ -92,5 +93,24 @@ public class QueueMessage {
                 this.setTimeout(0L);
             }
         }
+    }
+
+    /**
+     * Returns the amazon SQS message for this message or
+     * null
+     * used internally by SQSQueueService
+     * @return
+     */
+    public Message getSqsMessage() {
+        return sqsMessage;
+    }
+
+    /**
+     * Sets the amazon SQS message for this message
+     * used internally by SQSQueueService
+     * @param sqsMessage
+     */
+    public void setSqsMessage(Message sqsMessage) {
+        this.sqsMessage = sqsMessage;
     }
 }
