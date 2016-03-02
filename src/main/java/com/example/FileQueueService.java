@@ -9,8 +9,29 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
+/**
+ * Implementation of a inter process file backed persistent queue.
+ * This queue will create a directory in the OS's nominated temp directory
+ * to place the queue. A lock file is used to ensure multi thread/process
+ * operations work as expected so long as they use the same queue name.
+ *
+ * Note that if a queue operation fails without calling finally (E.G. process crash)
+ * that the lock file will remain and operations will block until it is cleared.
+ * Generally OS's clear the temp directory on reboot so this queue will not
+ * persist reboots.
+ * It does not check the integrity of the messages or attempt to repair them, thus
+ * corrupted messaged will be discarded at some point and lost.
+ * This solution does not scale well beyond a few processes or thousand messages.
+ */
 public class FileQueueService implements QueueService {
 
+    /**
+     * Push QueueMessage onto the queue for processing.
+     * @param queueName
+     * @param message
+     * @throws InterruptedException
+     * @throws IOException
+     */
     @Override
     public void push(String queueName, QueueMessage message) throws InterruptedException, IOException {
         File messages = this.getMessagesFile(queueName);
@@ -24,6 +45,15 @@ public class FileQueueService implements QueueService {
         }
     }
 
+    /**
+     * Pulls the next available message from the queue to be processed.
+     * Generally FIFO
+     * @param queueName
+     * @param visibilityTimeout
+     * @return
+     * @throws InterruptedException
+     * @throws IOException
+     */
     @Override
     public QueueMessage pull(String queueName, long visibilityTimeout) throws InterruptedException, IOException {
         File messages = this.getMessagesFile(queueName);
@@ -61,14 +91,21 @@ public class FileQueueService implements QueueService {
         return returnQueueMessage;
     }
 
+    /**
+     * Delete a message passed in. Duplicate messages with
+     * duplicate timeout values will have the first message found will
+     * be deleted. In theory this sounds bad, but in practive they are
+     * duplicates so it shouldn't matter.
+     * @param queueName
+     * @param message
+     * @throws InterruptedException
+     */
     @Override
     public void delete(String queueName, QueueMessage message) throws InterruptedException {
-        // If we have duplicate message and timeout values we delete the first
-        // wrong one? Possibly, but if they are duplicates it probably dosn't matter
-
         File messages = this.getMessagesFile(queueName);
         File lock = this.getLockFile(queueName);
         File tempMessages = this.getTempMessagesFile(queueName);
+        boolean haveDeleted = false;
 
         this.lock(lock);
         try (PrintWriter pw = new PrintWriter(new FileWriter(tempMessages, true))) {
@@ -78,8 +115,11 @@ public class FileQueueService implements QueueService {
             for (String msg : messageList) {
                 queueMessage.stringDecode(msg);
 
-                if(!queueMessage.areSame(message)) {
+                if(haveDeleted || !queueMessage.areSame(message)) {
                     pw.println(queueMessage.stringEncode());
+                }
+                else {
+                    haveDeleted = true;
                 }
             }
 

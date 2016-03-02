@@ -64,6 +64,19 @@ public class FileQueueTest extends TestCase {
         assertNull(queue.pull(testQueueName, 0));
     }
 
+    public void testDuplicateDeleteOnlyOneDeleted() throws IOException, InterruptedException {
+        String expectedMessage = "My message " + System.currentTimeMillis();
+        QueueMessage expected1 = new QueueMessage(expectedMessage);
+        QueueMessage expected2 = new QueueMessage(expectedMessage);
+
+        queue.push(testQueueName, expected1);
+        queue.push(testQueueName, expected2);
+
+        queue.delete(testQueueName, expected1);
+
+        assertEquals(expectedMessage, queue.pull(testQueueName, 0).getMessage());
+    }
+
     public void testEmptyDelete() throws IOException, InterruptedException {
         String expectedMessage = "My message " + System.currentTimeMillis();
         QueueMessage expected = new QueueMessage(expectedMessage);

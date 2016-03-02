@@ -11,7 +11,6 @@ public class InMemoryQueueService implements QueueService {
 
     /**
      * Create an in memory queue with size of 10000 elements
-     * and 10 second visibility timeout
      */
     public InMemoryQueueService(){
         this.ringBufferQueue = new QueueMessage[10000];
@@ -30,7 +29,7 @@ public class InMemoryQueueService implements QueueService {
 
     /**
      * Push QueueMessage onto the queue for processing. Queue name is ignored
-     * for this implementation of the queue. To use a seperate queue create
+     * for this implementation of the queue. To use a separate queue create
      * a new instance of this class.
      * @param queueName
      * @param message
@@ -68,9 +67,6 @@ public class InMemoryQueueService implements QueueService {
      * No guarantee on order but attempts to be FIFO
      * Assuming processing time is the same for jobs
      * this should hold true.
-     * Messages pulled will be locked for
-     * 10 seconds before being delivered to another consumer
-     * if not deleted.
      * Parameter queueName is ignored
      * @param queueName
      * @param visibilityTimeout
