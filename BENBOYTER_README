@@ -1,0 +1,19 @@
+Canva Test Assumtions
+
+InMemoryQueue
+- Has a fixed size which can be changed via constructor
+- Attempts to be FIFO
+- Attempts to have reasonable performance
+
+FileQueue
+- Not required to be persistent between machine reboots
+- Persistant between JVM restarts
+- Performance across hundreds of JVM's and thousands of messages not a requirement (its rather slow)
+
+SQSQueue
+- Not a real implementation
+- I don't think this will work in the real word, but not much would be required to make it work
+- Few unit tests, would move to integration tests for this
+
+UnitTests
+- Avoided mocking where possible
