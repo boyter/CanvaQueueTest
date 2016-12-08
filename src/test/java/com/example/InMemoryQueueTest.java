@@ -38,6 +38,21 @@ public class InMemoryQueueTest extends TestCase {
         assertTrue(exceptionThrown);
     }
 
+    public void testQueueMessagesNotOverwritten() {
+        InMemoryQueueService queue = new InMemoryQueueService(2);
+
+        try {
+            queue.push("", new QueueMessage("Message1"));
+            queue.push("", new QueueMessage("Message2"));
+            queue.push("", new QueueMessage("Message3"));
+        } catch (QueueFullException e) {
+            e.printStackTrace();
+        }
+
+        assertEquals("Message1", queue.pull("", 10000).getMessage());
+        assertEquals("Message2", queue.pull("", 10000).getMessage());
+    }
+
     public void testPullNoMessageExpectsNull() {
         InMemoryQueueService queue = new InMemoryQueueService();
         QueueMessage message = queue.pull("", 0);
